@@ -1,26 +1,25 @@
-params.assemblies = "/scratch/pawsey0812/pmisiun/assemblies"
-params.busco_lineage = "vertebrata_odb10"
+
 
 process BUSCO {
 	cpus 32
 	input:
-	path assembly
+	tuple val(sample), path(assembly)
 	output:
-	path "run_*"
+	tuple val(sample), path("run_*")
 
 	"""
-	mkdir run_${assembly.baseName}
+	busco --in ${assembly} -l ${params.busco_lineage} --mode genome --cpu ${task.cpus * 2} -o run_${assembly.baseName}
 	"""
 }
 
 process BUSCOMP {
 	input:
-	tuple path "assembles"
-	output
+	tuple val(sample), path(data)
+	output:
 	path "buscomp.faa"
 
 	"""
-	python /buscomp/code/buscomp.py runs=$busco_runs fastadir=$assemblies i=-1 buscompseq=F basefile=buscomp rmdreport=F
+	python /buscomp/code/buscomp.py runs="run_*" fastadir=${task.workDir} i=-1 buscompseq=F basefile=buscomp rmdreport=F basefile=${sample}
 	"""
 }
 
@@ -71,16 +70,23 @@ process ASTRAL {
 }
 
 workflow {
-	genomes = Channel.fromPath("${params.assemblies}/**")
-	println params.samplePaths
-	sampleChannels = Channel.fromPaths(params.samplePaths)
-	
-	/*busco_runs = BUSCO(genomes)
-	def buscomp = Channel.fromPath(params.buscomp_runs)
-	*genes = PARSE_GENES(buscomp).flatten()
-	*msa = MAFFT(genes)
-    trees = IQTREE2(msa).collectFile(name: 'loci.treefile')
-	tree = ASTRAL(trees)
-	tree.view()
-	*/
+	def assemblies = []
+	params.samplePaths.each { key, value ->
+		def files = file(value)
+		files.each { fasta ->
+		assemblies.add([key, fasta])
+		}
+	}
+
+	genomes = Channel.from(assemblies)
+	busco_runs = BUSCO(genomes).mix(genomes).groupTuple()
+	buscomp_runs = BUSCOMP(busco_runs)
+
+	// def buscomp = Channel.fromPath(params.buscomp_runs)
+	// genes = PARSE_GENES(buscomp).flatten()
+	// msa = MAFFT(genes)
+    // trees = IQTREE2(msa).collectFile(name: 'loci.treefile')
+	// tree = ASTRAL(trees)
+	// tree.view()
+
 }
