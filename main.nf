@@ -1,5 +1,6 @@
 
 process BUSCO {
+	publishDir params.busco_out
 	errorStrategy 'ignore'
 	cpus 32
 	input:
@@ -14,6 +15,7 @@ process BUSCO {
 
 
 process BUSCOMP {
+	publishDir params.buscomp_out
 	input:
 	tuple val(sample), path(data)
 	output:
@@ -25,6 +27,7 @@ process BUSCOMP {
 }
 
 process PARSE_GENES {
+	publishDir params.parse_genes_out
 	input:
 	path buscomp_runs
 	output:
@@ -61,7 +64,7 @@ process IQTREE2 {
 
 process ASTRAL {
 	input:
-	path "trees"
+	path trees
 	output:
 	path "species.treefile"
 
