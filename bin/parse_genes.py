@@ -14,11 +14,11 @@ os.mkdir(working_dir + "parsed_genes/")
 
 
 # store sample names
-samples = os.listdir(sys.argv[1])
+samples = filter(os.path.isfile, os.listdir( os.curdir ) )
 print(samples)
 
 for sample in samples:
-    sample_dir = working_dir + "buscomp_runs/" + sample
+    sample_dir = working_dir + sample
     with open(sample_dir, "r") as buscomp_output:
         for record in SeqIO.parse(buscomp_output, "fasta"):
             output_filename = working_dir + "parsed_genes/" + record.id + ".fasta"
@@ -33,6 +33,6 @@ parsed_genes = os.listdir(working_dir + "parsed_genes/")
 
 for gene in parsed_genes:
     parsed_dir = working_dir + "parsed_genes/" + gene
-    if sum(1 for _ in SeqIO.parse(parsed_dir, "fasta")) < 3:
+    if sum(1 for _ in SeqIO.parse(parsed_dir, "fasta")) < 4:
         os.remove(parsed_dir)
         print("removing" + parsed_dir)

@@ -1,6 +1,6 @@
 
-
 process BUSCO {
+	errorStrategy 'ignore'
 	cpus 32
 	input:
 	tuple val(sample), path(assembly)
@@ -12,25 +12,26 @@ process BUSCO {
 	"""
 }
 
+
 process BUSCOMP {
 	input:
 	tuple val(sample), path(data)
 	output:
-	path "buscomp.faa"
+	path "${sample}.buscomp.faa"
 
 	"""
-	python /buscomp/code/buscomp.py runs="run_*" fastadir=${task.workDir} i=-1 buscompseq=F basefile=buscomp rmdreport=F basefile=${sample}
+	python /buscomp/code/buscomp.py runs="run_*" i=-1 buscompseq=F basefile=buscomp rmdreport=F basefile=${sample}
 	"""
 }
 
 process PARSE_GENES {
 	input:
-	path "buscomp_runs"
+	path buscomp_runs
 	output:
 	path "parsed_genes/*"
 
 	"""
-	python $projectDir/parse_genes.py ${buscomp_runs}
+	python $projectDir/bin/parse_genes.py buscomp
 	"""
 }
 
@@ -70,23 +71,39 @@ process ASTRAL {
 }
 
 workflow {
-	def assemblies = []
-	params.samplePaths.each { key, value ->
-		def files = file(value)
-		files.each { fasta ->
-		assemblies.add([key, fasta])
+	def buscos = []
+	params.sampleBuscoPaths.each { key, value ->
+		def runs = files(value, type:'dir')
+		runs.each {run ->
+		buscos.add([key, run])
 		}
 	}
 
-	genomes = Channel.from(assemblies)
-	busco_runs = BUSCO(genomes).mix(genomes).groupTuple()
-	buscomp_runs = BUSCOMP(busco_runs)
+	def busco_base = buscos.collect {sample, fasta -> return "$fasta.name"}
+	println(busco_base)
 
-	// def buscomp = Channel.fromPath(params.buscomp_runs)
-	// genes = PARSE_GENES(buscomp).flatten()
-	// msa = MAFFT(genes)
-    // trees = IQTREE2(msa).collectFile(name: 'loci.treefile')
-	// tree = ASTRAL(trees)
-	// tree.view()
+	def assemblies = []
+	params.samplePaths.each { key, value ->
+		def files = files(value)
+		files.each { fasta ->
+			if("run_$fasta.baseName" !in busco_base){
+				assemblies.add([key, fasta])
+			}
+		}
+	}
+	// fasta_base = busco.collect {it[1]}
+	
+
+	genomes = Channel.from(assemblies)
+	busco_input = Channel.from(buscos)
+	busco_runs = BUSCO(genomes).mix(genomes, busco_input).groupTuple()
+
+	
+	buscomp_runs = BUSCOMP(busco_runs).collect()
+	genes = PARSE_GENES(buscomp_runs).flatten()
+	msa = MAFFT(genes)
+    trees = IQTREE2(msa).collectFile(name: 'loci.treefile')
+	tree = ASTRAL(trees)
+	tree.view()
 
 }
