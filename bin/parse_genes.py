@@ -33,6 +33,6 @@ parsed_genes = os.listdir(working_dir + "parsed_genes/")
 
 for gene in parsed_genes:
     parsed_dir = working_dir + "parsed_genes/" + gene
-    if sum(1 for _ in SeqIO.parse(parsed_dir, "fasta")) < 5:
+    if sum(1 for _ in SeqIO.parse(parsed_dir, "fasta")) < 10:
         os.remove(parsed_dir)
         print("removing" + parsed_dir)

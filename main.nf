@@ -2,7 +2,6 @@
 process BUSCO {
 	publishDir params.busco_out
 	errorStrategy 'ignore'
-	cpus 32
 	input:
 	tuple val(sample), path(assembly)
 	output:
@@ -39,27 +38,49 @@ process PARSE_GENES {
 }
 
 process MAFFT {
-	cpus 1
 	input:
-	path "gene"
+	path gene
     output:
-	path "MSA.fasta"
+	path "${gene}.fasta"
 
     """
-    mafft --quiet ${gene} > MSA.fasta
+    mafft --quiet ${gene} > ${gene}.fasta
     """
 }
 
 process IQTREE2 {
-	cpus 1
 	input:
-	path "msa"
+	path msa
 	output:
-	path "msa.treefile"
+	path "${msa}.treefile"
 
     """
     iqtree2 -s ${msa}
     """
+}
+
+process IQTREE2_CONCAT_CONSENSUS {
+	input:
+	path msa
+	output:
+	path "concat.treefile"
+
+	"""
+	mkdir Fasta
+	mv *.fasta Fasta
+	iqtree2 -p Fasta --prefix concat -B 1000 -T 128
+	"""
+}
+
+process IQTREE2_COALESCENT_CONSENSUS {
+	input:
+	path trees
+	output:
+	path "loci.treefile.contree"
+
+	"""
+	iqtree2 -t ${trees} -con -T 128
+	"""
 }
 
 process ASTRAL {
@@ -86,27 +107,32 @@ workflow {
 	println(busco_base)
 
 	def assemblies = []
+	def assemblies_for_busco = []
 	params.samplePaths.each { key, value ->
 		def files = files(value)
 		files.each { fasta ->
+			assemblies.add([key, fasta])
 			if("run_$fasta.baseName" !in busco_base){
-				assemblies.add([key, fasta])
+				assemblies_for_busco.add([key, fasta])
 			}
 		}
 	}
 	// fasta_base = busco.collect {it[1]}
 	
 
-	genomes = Channel.from(assemblies)
+	for_busco = Channel.from(assemblies_for_busco)
 	busco_input = Channel.from(buscos)
-	busco_runs = BUSCO(genomes).mix(genomes, busco_input).groupTuple()
+	asm = Channel.from(assemblies)
+	busco_runs = BUSCO(for_busco).mix(asm, busco_input).groupTuple()
 
 	
 	buscomp_runs = BUSCOMP(busco_runs).collect()
 	genes = PARSE_GENES(buscomp_runs).flatten()
 	msa = MAFFT(genes)
+	// tree = IQTREE2_CONCAT_CONSENSUS(msa)
     trees = IQTREE2(msa).collectFile(name: 'loci.treefile')
-	tree = ASTRAL(trees)
-	tree.view()
+	tree = IQTREE2_COALESCENT_CONSENSUS(trees)
+	// tree = ASTRAL(trees)
+	// tree.view()
 
 }
