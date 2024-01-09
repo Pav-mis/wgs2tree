@@ -1,6 +1,4 @@
-
-include { BUSCO; BUSCOMP; PARSE_GENES; MAFFT; IQTREE2; ASTRAL; IQTREE2_COALESCENT_CONSENSUS } from './processes.nf'
-
+include { BUSCO; BUSCOMP; PARSE_GENES; MAFFT; IQTREE2_CONCAT_CONSENSUS } from './processes.nf'
 
 
 workflow {
@@ -17,8 +15,6 @@ workflow {
 
 	def assemblies = []
 	def assemblies_for_busco = []
-
-	//determines which assemblies need BUSCO run on them (BUSCO runs have not been given)
 	params.samplePaths.each { key, value ->
 		def files = files(value)
 		files.each { fasta ->
@@ -29,21 +25,16 @@ workflow {
 		}
 	}
 	
-	//Channel of assemblies for BUSCO
+
 	for_busco = Channel.from(assemblies_for_busco)
-	//Channel of given BUSCOs
 	busco_input = Channel.from(buscos)
-	//Channel of given assemblies
 	asm = Channel.from(assemblies)
-	//run BUSCO on assemblies with missing runs, combine assembly and busco channels, group them by sample name for input into buscomp
 	busco_runs = BUSCO(for_busco).mix(asm, busco_input).groupTuple()
 
 	
 	buscomp_runs = BUSCOMP(busco_runs).collect()
 	genes = PARSE_GENES(buscomp_runs).flatten()
-	msa = MAFFT(genes)
-    trees = IQTREE2(msa).collectFile(name: 'loci.treefile')
-	tree = ASTRAL(trees)
+	msa = MAFFT(genes).collect()
+	tree = IQTREE2_CONCAT_CONSENSUS(msa)
 	tree.view()
-
 }
