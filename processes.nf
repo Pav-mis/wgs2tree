@@ -1,21 +1,35 @@
+process DOWNLOAD_LINEAGES {
+	output: 
+    val true
+
+    """
+    compleasm download -L ${params.lineage_folder} ${params.busco_lineage}
+    """
+}
+
 process BUSCO {
 	publishDir params.busco_out
-	errorStrategy 'ignore'
+	errorStrategy 'retry'
 
 	input:
+	val ready
 	tuple val(sample), path(assembly)
 
 	output:
 	tuple val(sample), path("run_*")
 
 	"""
-	busco --in ${assembly} -l ${params.busco_lineage} --mode genome --cpu ${task.cpus * 2} -o run_${assembly.baseName}
+	busco --in ${assembly} -l ${params.lineage_folder}/${params.busco_lineage} --mode genome --cpu ${task.cpus * 2} -o run_${assembly.baseName}
 	"""
 }
 
 
 process COMPLEASM {
+	publishDir params.compleasm_out
+	errorStrategy 'retry'
+	
 	input:
+	val ready
 	tuple val(sample), path(assembly)
 
 	output:
@@ -29,7 +43,6 @@ process COMPLEASM {
 
 
 process PARSE_TABLE {
-	publishDir "/scratch/pawsey0812/pmisiun/nf_compleasm"
 	stageInMode "copy"
 
 	input:
@@ -50,7 +63,7 @@ process PARSE_TABLE {
 	grep -vE '^##STA' run_*/*/miniprot_output.gff > remove_PAF.gff
 	awk -F'\t' '\$3 != "stop_codon"' remove_PAF.gff > remove_stops.gff
 
-	python $projectDir/bin/test.py ${run}/run_${params.busco_lineage}/ ${assembly}
+	python $projectDir/bin/parse_table.py ${run}/run_${params.busco_lineage}/ ${assembly}
 
 	echo "# BUSCO version is: 5.4.7" | cat - ${run}/run_${params.busco_lineage}/full_table_busco_format.tsv > ${run}/run_${params.busco_lineage}/full_table.tsv
 	"""
@@ -58,7 +71,6 @@ process PARSE_TABLE {
 
 process BUSCOMP {
 	publishDir params.buscomp_out
-	cache false
 	input:
 	tuple val(sample), path(data)
 
@@ -81,7 +93,7 @@ process PARSE_GENES {
 	path "parsed_genes/*"
 
 	"""
-	python $projectDir/bin/parse_genes.py buscomp
+	python $projectDir/bin/parse_genes.py
 	"""
 }
 
@@ -133,28 +145,30 @@ process ASTRAL {
 
 
 process IQTREE2_CONCAT_CONSENSUS {
+	publishDir params.concat_out
 	input:
 	path msa
 
 	output:
-	path "concat.treefile"
+	path "species.treefile"
 
 	"""
 	mkdir Fasta
 	mv *.fasta Fasta
-	iqtree2 -p Fasta --prefix concat -B 1000 -T 128
+	iqtree2 -p Fasta --prefix species -B 1000 -T 128
 	"""
 }
 
-
-process IQTREE2_COALESCENT_CONSENSUS {
+process GCF {
+	publishDir params.final_out
 	input:
-	path trees
+	path supertree
+	path locitree
 
 	output:
-	path "loci.treefile.contree"
+	path "concord.cf.tree"
 
 	"""
-	iqtree2 -t ${trees} -con -T 128
+	iqtree2 -t ${supertree} --gcf ${locitree} --prefix concord
 	"""
 }

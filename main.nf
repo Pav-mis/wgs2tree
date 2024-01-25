@@ -1,9 +1,7 @@
-
-include { BUSCO; BUSCOMP; PARSE_GENES; MAFFT; IQTREE2; ASTRAL; IQTREE2_COALESCENT_CONSENSUS } from './processes.nf'
-
-
+include { DOWNLOAD_LINEAGES; COMPLEASM; BUSCO; PARSE_TABLE; BUSCOMP; PARSE_GENES; MAFFT; IQTREE2; IQTREE2_CONCAT_CONSENSUS; ASTRAL; GCF } from './processes.nf'
 
 workflow {
+
 	def buscos = []
 	params.sampleBuscoPaths.each { key, value ->
 		def runs = files(value, type:'dir')
@@ -28,22 +26,36 @@ workflow {
 			}
 		}
 	}
-	
+
+
 	//Channel of assemblies for BUSCO
 	for_busco = Channel.from(assemblies_for_busco)
 	//Channel of given BUSCOs
 	busco_input = Channel.from(buscos)
 	//Channel of given assemblies
 	asm = Channel.from(assemblies)
-	//run BUSCO on assemblies with missing runs, combine assembly and busco channels, group them by sample name for input into buscomp
-	busco_runs = BUSCO(for_busco).mix(asm, busco_input).groupTuple()
 
 	
-	buscomp_runs = BUSCOMP(busco_runs).collect()
+	DOWNLOAD_LINEAGES()
+
+	if (params.withBusco == true) {
+		run = BUSCO(DOWNLOAD_LINEAGES.out, for_busco).mix(asm, busco_input).groupTuple()
+	}
+	else {
+		run = PARSE_TABLE(COMPLEASM(DOWNLOAD_LINEAGES.out, for_busco)).mix(asm, busco_input).groupTuple()
+	}
+
+	buscomp_runs = BUSCOMP(run).collect()
 	genes = PARSE_GENES(buscomp_runs).flatten()
 	msa = MAFFT(genes)
     trees = IQTREE2(msa).collectFile(name: 'loci.treefile')
-	tree = ASTRAL(trees)
-	tree.view()
+	if (params.withConcat == true) {
+		tree = IQTREE2_CONCAT_CONSENSUS(msa.collect())
+	}
+	else {
+		tree = ASTRAL(trees)
+	}
+	final_tree = GCF(tree, trees)
+	final_tree.view()
 
 }
