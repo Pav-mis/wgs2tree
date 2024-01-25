@@ -58,6 +58,7 @@ process PARSE_TABLE {
 
 process BUSCOMP {
 	publishDir params.buscomp_out
+	cache false
 	input:
 	tuple val(sample), path(data)
 
