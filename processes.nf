@@ -14,9 +14,51 @@ process BUSCO {
 }
 
 
+process COMPLEASM {
+	input:
+	tuple val(sample), path(assembly)
+
+	output:
+	tuple val(sample), path("run_*"), path(assembly)
+	
+	"""
+	compleasm run -m 'busco' -a ${assembly} -l ${params.busco_lineage} -L ${params.lineage_folder} -t ${task.cpus * 2} -o run_${assembly.baseName}
+	"""
+
+}
+
+
+process PARSE_TABLE {
+	publishDir "/scratch/pawsey0812/pmisiun/nf_compleasm"
+	stageInMode "copy"
+
+	input:
+	tuple val(sample), path(run), path(assembly)
+	output:
+	tuple val(sample), path(run)
+
+	"""
+	# Change run directory to have run_ prefix
+	mv ${run}/*/ ${run}/run_${params.busco_lineage}/
+
+	# Create directories for busco sequences
+	mkdir ${run}/run_${params.busco_lineage}/busco_sequences/
+	mkdir ${run}/run_${params.busco_lineage}/busco_sequences/single_copy_busco_sequences/
+	mkdir ${run}/run_${params.busco_lineage}/busco_sequences/multi_copy_busco_sequences/
+	mkdir ${run}/run_${params.busco_lineage}/busco_sequences/fragmented_busco_sequences/
+	
+	grep -vE '^##STA' run_*/*/miniprot_output.gff > remove_PAF.gff
+	awk -F'\t' '\$3 != "stop_codon"' remove_PAF.gff > remove_stops.gff
+
+	python $projectDir/bin/test.py ${run}/run_${params.busco_lineage}/ ${assembly}
+
+	echo "# BUSCO version is: 5.4.7" | cat - ${run}/run_${params.busco_lineage}/full_table_busco_format.tsv > ${run}/run_${params.busco_lineage}/full_table.tsv
+	"""
+}
+
 process BUSCOMP {
 	publishDir params.buscomp_out
-
+	cache false
 	input:
 	tuple val(sample), path(data)
 
