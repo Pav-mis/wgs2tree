@@ -19,7 +19,7 @@ process BUSCO {
 	tuple val(sample), path("run_*")
 
 	"""
-	busco --in ${assembly} -l ${params.lineage_folder}/${params.busco_lineage} --mode genome --cpu ${task.cpus * 2} -o run_${assembly.baseName}
+	busco --in ${assembly} -l ${params.busco_lineage} --mode genome --cpu ${task.cpus * 2} -o run_${assembly.baseName}
 	"""
 }
 
