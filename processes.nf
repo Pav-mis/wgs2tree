@@ -8,7 +8,7 @@ process DOWNLOAD_LINEAGES {
 }
 
 process BUSCO {
-	publishDir params.busco_out
+	publishDir "${params.outPath}/nf_busco", mode: 'copy', overwrite: true
 	errorStrategy 'retry'
 
 	input:
@@ -25,7 +25,7 @@ process BUSCO {
 
 
 process COMPLEASM {
-	publishDir params.compleasm_out
+	publishDir "${params.outPath}/nf_compleasm", mode: 'copy', overwrite: true
 	errorStrategy 'retry'
 	
 	input:
@@ -70,7 +70,7 @@ process PARSE_TABLE {
 }
 
 process BUSCOMP {
-	publishDir params.buscomp_out
+	publishDir "${params.outPath}/nf_buscomp", mode: 'copy', overwrite: true
 	input:
 	tuple val(sample), path(data)
 
@@ -84,7 +84,7 @@ process BUSCOMP {
 
 
 process PARSE_GENES {
-	publishDir params.parse_genes_out
+	publishDir "${params.outPath}/nf_parsed_genes", mode: 'copy', overwrite: true
 
 	input:
 	path buscomp_runs
@@ -93,13 +93,13 @@ process PARSE_GENES {
 	path "parsed_genes/*"
 
 	"""
-	python $projectDir/bin/parse_genes.py
+	python $projectDir/bin/parse_genes.py ${params.sharedGeneThreshold}
 	"""
 }
 
 
 process MAFFT {
-	publishDir params.mafft_out
+	publishDir "${params.outPath}/nf_mafft", mode: 'copy', overwrite: true
 
 	input:
 	path gene
@@ -114,7 +114,7 @@ process MAFFT {
 
 
 process IQTREE2 {
-	publishDir params.iqtree_out
+	publishDir "${params.outPath}/nf_iqtree", mode: 'copy', overwrite: true
 
 	input:
 	path msa
@@ -129,7 +129,7 @@ process IQTREE2 {
 
 
 process ASTRAL {
-	publishDir params.astral_out
+	publishDir "${params.outPath}/nf_astral", mode: 'copy', overwrite: true
 	cache false
 
 	input:
@@ -145,7 +145,7 @@ process ASTRAL {
 
 
 process IQTREE2_CONCAT_CONSENSUS {
-	publishDir params.concat_out
+	publishDir "${params.outPath}/nf_concat", mode: 'copy', overwrite: true
 	input:
 	path msa
 
@@ -155,12 +155,12 @@ process IQTREE2_CONCAT_CONSENSUS {
 	"""
 	mkdir Fasta
 	mv *.fasta Fasta
-	iqtree2 -p Fasta --prefix species -B 1000 -T 128
+	iqtree2 -p Fasta --prefix species -B 1000 -T ${task.cpus}
 	"""
 }
 
 process GCF {
-	publishDir params.final_out
+	publishDir params.outPath, mode: 'copy', overwrite: true
 	input:
 	path supertree
 	path locitree

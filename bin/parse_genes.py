@@ -2,6 +2,7 @@
 from distutils import filelist
 import sys, os, re
 from Bio import SeqIO
+import math
 
 
 # working_dir = /srv/scratch/z5206348/
@@ -9,7 +10,7 @@ working_dir = os.getcwd() + "/"
 busco_genes = []
 
 os.mkdir(working_dir + "parsed_genes/")
-
+shared_gene_threshold = float(sys.argv[1])
 
 
 # store sample names
@@ -33,6 +34,6 @@ parsed_genes = os.listdir(working_dir + "parsed_genes/")
 
 for gene in parsed_genes:
     parsed_dir = working_dir + "parsed_genes/" + gene
-    if sum(1 for _ in SeqIO.parse(parsed_dir, "fasta")) < len(samples):
+    if sum(1 for _ in SeqIO.parse(parsed_dir, "fasta")) < math.ceil(len(samples)*shared_gene_threshold):
         os.remove(parsed_dir)
         print("removing " + parsed_dir)

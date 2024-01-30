@@ -18,5 +18,5 @@ module load nextflow/23.10.0
 unset SBATCH_EXPORT
 
 
-srun -c 1 nextflow run wgs2tree/main.nf -resume -c wgs2tree/example.config
+srun -c 1 nextflow run wgs2tree/test.nf -resume -c wgs2tree/test.config
 
