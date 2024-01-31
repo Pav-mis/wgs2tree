@@ -96,6 +96,11 @@ git clone https://github.com/Pav-mis/wgs2tree
 ```
 nextflow run main.nf --inPath 'assemblies' --outPath 'NF' --withBusco true --lineage 'vertebrata_odb10' --geneThres 0.9
 ```
-
+OR  
+  
+Create a custom config file with all of your parameters and use this, e.g.
+```
+nextflow run main.nf -c custom.config
+```
 If running on slurm, wrap run command in an sbatch script, allocating a single core. If running for the first time, allocate more memory, as initial pulling/building of singularity containers is memory intensive. 
 

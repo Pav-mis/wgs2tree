@@ -64,20 +64,20 @@ process PARSE_TABLE {
 
 	"""
 	# Change run directory to have run_ prefix
-	mv ${run}/*/ ${run}/run_${params.busco_lineage}/
+	mv ${run}/*/ ${run}/run_${params.lineage}/
 
 	# Create directories for busco sequences
-	mkdir ${run}/run_${params.busco_lineage}/busco_sequences/
-	mkdir ${run}/run_${params.busco_lineage}/busco_sequences/single_copy_busco_sequences/
-	mkdir ${run}/run_${params.busco_lineage}/busco_sequences/multi_copy_busco_sequences/
-	mkdir ${run}/run_${params.busco_lineage}/busco_sequences/fragmented_busco_sequences/
+	mkdir ${run}/run_${params.lineage}/busco_sequences/
+	mkdir ${run}/run_${params.lineage}/busco_sequences/single_copy_busco_sequences/
+	mkdir ${run}/run_${params.lineage}/busco_sequences/multi_copy_busco_sequences/
+	mkdir ${run}/run_${params.lineage}/busco_sequences/fragmented_busco_sequences/
 	
 	grep -vE '^##STA' run_*/*/miniprot_output.gff > remove_PAF.gff
 	awk -F'\t' '\$3 != "stop_codon"' remove_PAF.gff > remove_stops.gff
 
-	python $projectDir/bin/parse_table.py ${run}/run_${params.busco_lineage}/ ${assembly}
+	python $projectDir/bin/parse_table.py ${run}/run_${params.lineage}/ ${assembly}
 
-	echo "# BUSCO version is: 5.4.7" | cat - ${run}/run_${params.busco_lineage}/full_table_busco_format.tsv > ${run}/run_${params.busco_lineage}/full_table.tsv
+	echo "# BUSCO version is: 5.4.7" | cat - ${run}/run_${params.lineage}/full_table_busco_format.tsv > ${run}/run_${params.lineage}/full_table.tsv
 	"""
 }
 
