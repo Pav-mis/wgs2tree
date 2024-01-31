@@ -1,15 +1,29 @@
-process DOWNLOAD_LINEAGES {
+process DOWNLOAD_LINEAGES_COMPLEASM {
+	cache false
+
 	output: 
     val true
 
     """
-    compleasm download -L ${params.lineage_folder} ${params.busco_lineage}
+    compleasm download -L ${params.compleasmDir} ${params.lineage}
+    """
+}
+
+process DOWNLOAD_LINEAGES_BUSCO {
+	cache false
+
+	output: 
+    val true
+
+    """
+	mkdir -p ${params.buscoDir}
+    busco --download ${params.lineage}
+	cp -r busco_downloads/* ${params.buscoDir}
     """
 }
 
 process BUSCO {
 	publishDir "${params.outPath}/nf_busco", mode: 'copy', overwrite: true
-	errorStrategy 'retry'
 
 	input:
 	val ready
@@ -19,15 +33,12 @@ process BUSCO {
 	tuple val(sample), path("run_*")
 
 	"""
-	busco --in ${assembly} -l ${params.busco_lineage} --mode genome --cpu ${task.cpus * 2} -o run_${assembly.baseName}
+	busco --in ${assembly} -l ${params.buscoDir}/lineages/${params.lineage} --mode genome --cpu ${task.cpus * 2} -o run_${assembly.baseName}
 	"""
 }
 
 
 process COMPLEASM {
-	publishDir "${params.outPath}/nf_compleasm", mode: 'copy', overwrite: true
-	errorStrategy 'retry'
-	
 	input:
 	val ready
 	tuple val(sample), path(assembly)
@@ -36,13 +47,14 @@ process COMPLEASM {
 	tuple val(sample), path("run_*"), path(assembly)
 	
 	"""
-	compleasm run -m 'busco' -a ${assembly} -l ${params.busco_lineage} -L ${params.lineage_folder} -t ${task.cpus * 2} -o run_${assembly.baseName}
+	compleasm run -m 'busco' -a ${assembly} -l ${params.lineage} -L ${params.compleasmDir} -t ${task.cpus * 2} -o run_${assembly.baseName}
 	"""
 
 }
 
 
 process PARSE_TABLE {
+	publishDir "${params.outPath}/nf_compleasm", mode: 'copy', overwrite: true
 	stageInMode "copy"
 
 	input:
@@ -93,7 +105,7 @@ process PARSE_GENES {
 	path "parsed_genes/*"
 
 	"""
-	python $projectDir/bin/parse_genes.py ${params.sharedGeneThreshold}
+	python $projectDir/bin/parse_genes.py ${params.geneThres}
 	"""
 }
 
