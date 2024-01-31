@@ -41,7 +41,7 @@ nextflow run main.nf [options]
 ## Input format
 The input directory should contain fasta files of assemblies and optionally busco/compleasm runs associated with these assemblies.
 
-**One assembly per sample**
+**One assembly per sample**  
 When one assembly per sample is used, the directory should simply contain fasta files. The labels on the final tree will be the base-name of each fasta file, e.g.
 
 ```
@@ -50,7 +50,7 @@ inPath
 ├── dog.fasta
 └── mouse.fasta
 ```
-**Multiple assemblies per sample**
+**Multiple assemblies per sample**  
 When multiple assemblies per sample are used, these should be put into a subdirectory. The name of the subdirectory will be used as the label for the sample in the final tree, e.g.
 
 ```
@@ -62,7 +62,7 @@ inPath
 └── mouse.fasta
 ```
 
-**Including busco/compleasm as inputs**
+**Including busco/compleasm as inputs**  
 To include busco/compleasm runs in the input, the run directory should be in the same place as it's corresponding assembly. In order for pairing of assembly and busco inputs, the busco run directory must have the same base-name as the corresponding assembly fasta file, but with a 'run_' prefix, e.g.
 
 ```
