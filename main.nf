@@ -56,11 +56,11 @@ workflow {
 
 	if (params.withBusco == true) {
 	 	DOWNLOAD_LINEAGES_BUSCO()
-	 	run = BUSCO(DOWNLOAD_LINEAGES_BUSCO.out, for_busco).mix(asm, busco_input).groupTuple()
+	 	run = BUSCO(DOWNLOAD_LINEAGES_BUSCO.out, for_busco).mix(asm, busco_input).groupTuple() //.mix(asm, busco_input)
 	}
 	else {
 	 	DOWNLOAD_LINEAGES_COMPLEASM()
-	 	run = PARSE_TABLE(COMPLEASM(DOWNLOAD_LINEAGES_COMPLEASM.out, for_busco)).mix(asm, busco_input).groupTuple()
+	 	run = PARSE_TABLE(COMPLEASM(DOWNLOAD_LINEAGES_COMPLEASM.out, for_busco)).mix(asm, busco_input).groupTuple() //.mix(asm, busco_input)
 	}
 
 	buscomp_runs = BUSCOMP(run).collect()
