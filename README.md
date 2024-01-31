@@ -38,9 +38,10 @@ nextflow run main.nf [options]
 -resume         : Will resume workflow if previous run exists, using cached data
 ```
 
-**Input format**  
+## Input format
 The input directory should contain fasta files of assemblies and optionally busco/compleasm runs associated with these assemblies.
 
+**One assembly per sample**
 When one assembly per sample is used, the directory should simply contain fasta files. The labels on the final tree will be the base-name of each fasta file, e.g.
 
 ```
@@ -49,8 +50,8 @@ inPath
 ├── dog.fasta
 └── mouse.fasta
 ```
-
-When multiple assemblies per sample are used, These should be put into a subdirectory. The name of the subdirectory will be used as the label for the sample in the final tree, e.g.
+**Multiple assemblies per sample**
+When multiple assemblies per sample are used, these should be put into a subdirectory. The name of the subdirectory will be used as the label for the sample in the final tree, e.g.
 
 ```
 inPath
@@ -61,6 +62,7 @@ inPath
 └── mouse.fasta
 ```
 
+**Including busco/compleasm as inputs**
 To include busco/compleasm runs in the input, the run directory should be in the same place as it's corresponding assembly. In order for pairing of assembly and busco inputs, the busco run directory must have the same base-name as the corresponding assembly fasta file, but with a 'run_' prefix, e.g.
 
 ```
@@ -88,11 +90,11 @@ Ensure that any subdirectories that are not busco runs do not contain a "run_" p
 git clone https://github.com/Pav-mis/wgs2tree
 ```
 
-3. establish input directory structure (see above)
+3. Establish input directory structure (see above).
 
 4. run pipeline, e.g.
 ```
-nextflow run main.nf --inPath 'assemblies' --outPath 'NF' --withBusco true --geneThres 0.9
+nextflow run main.nf --inPath 'assemblies' --outPath 'NF' --withBusco true --lineage 'vertebrata_odb10' --geneThres 0.9
 ```
 
 If running on slurm, wrap run command in an sbatch script, allocating a single core. If running for the first time, allocate more memory, as initial pulling/building of singularity containers is memory intensive. 
