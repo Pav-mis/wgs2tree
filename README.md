@@ -42,7 +42,7 @@ nextflow run main.nf [options]
 The input directory should contain fasta files of assemblies and optionally busco/compleasm runs associated with these assemblies.
 
 **One assembly per sample**  
-When one assembly per sample is used, the directory should simply contain fasta files. The labels on the final tree will be the base-name of each fasta file, e.g.
+When one assembly per sample is used, there are two options. The simplest is to just have a directory of fasta files. The labels on the final tree will be the base-name of each fasta file, e.g.  
 
 ```
 inPath
@@ -50,6 +50,19 @@ inPath
 ├── dog.fasta
 └── mouse.fasta
 ```
+  
+You can also put them into their own subdirectories, where the name of the subdirectory will be the label on the tree, e.g.
+
+```
+inPath
+├── cat
+│   └── cat.fasta
+├── dog
+│   └── dog.fasta
+└── mouse
+    └── mouse.fasta
+```
+
 **Multiple assemblies per sample**  
 When multiple assemblies per sample are used, these should be put into a subdirectory. The name of the subdirectory will be used as the label for the sample in the final tree, e.g.
 
