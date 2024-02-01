@@ -115,5 +115,5 @@ Create a custom config file with all of your parameters and use this, e.g.
 ```
 nextflow run main.nf -c custom.config
 ```
-If running on slurm, wrap run command in an sbatch script, allocating a single core. If running for the first time, allocate more memory, as initial pulling/building of singularity containers is memory intensive. 
+If running on slurm, wrap run command in an sbatch script, allocating a single core (see `wgs2tree.sh`). If running for the first time, allocate more memory, as initial pulling/building of singularity containers is memory intensive. 
 

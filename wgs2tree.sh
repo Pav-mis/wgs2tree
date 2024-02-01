@@ -1,7 +1,7 @@
 #!/bin/bash --login
 
 #SBATCH --account=pawsey0812
-#SBATCH --job-name=wgs2tree_test
+#SBATCH --job-name=wgs2tree
 #SBATCH --partition=highmem
 #SBATCH --ntasks=1
 #SBATCH --ntasks-per-node=1
@@ -18,5 +18,5 @@ module load nextflow/23.10.0
 unset SBATCH_EXPORT
 
 
-srun -c 1 nextflow run wgs2tree/main.nf -resume -c wgs2tree/test.config
+nextflow run wgs2tree/main.nf -c wgs2tree/example.config
 
