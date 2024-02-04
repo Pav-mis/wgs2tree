@@ -5,7 +5,6 @@ from Bio import SeqIO
 import math
 
 
-# working_dir = /srv/scratch/z5206348/
 working_dir = os.getcwd() + "/"
 busco_genes = []
 
@@ -14,7 +13,6 @@ shared_gene_threshold = float(sys.argv[1])
 
 
 # store sample names
-#samples = list(filter(os.path.isfile, os.listdir( os.curdir ) ))
 samples = [s for s in os.listdir( os.curdir ) if "faa" in s]
 print(samples)
 

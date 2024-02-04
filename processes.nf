@@ -5,7 +5,9 @@ process DOWNLOAD_LINEAGES_COMPLEASM {
     val true
 
     """
-    compleasm download -L ${params.compleasmDir} ${params.lineage}
+	if [ ! -d "${params.compleasmDir}/${params.lineage}" ] || [ "${params.updateLineage}" = "true" ]; then
+    	compleasm download -L ${params.compleasmDir} ${params.lineage}
+	fi
     """
 }
 
@@ -16,9 +18,11 @@ process DOWNLOAD_LINEAGES_BUSCO {
     val true
 
     """
-	mkdir -p ${params.buscoDir}
-    busco --download ${params.lineage}
-	cp -r busco_downloads/* ${params.buscoDir}
+	if [ ! -d "${params.buscoDir}/lineages/${params.lineage}" ] || [ "${params.updateLineage}" = "true" ]; then
+		mkdir -p ${params.buscoDir}
+    	busco --download ${params.lineage}
+		cp -r busco_downloads/* ${params.buscoDir}
+	fi
     """
 }
 
@@ -135,7 +139,7 @@ process IQTREE2 {
 	path "${msa}.treefile"
 
     """
-    iqtree2 -s ${msa} -T ${task.cpus}
+    iqtree2 -s ${msa} -T ${task.cpus * 2}
     """
 }
 
