@@ -23,7 +23,7 @@ nextflow run main.nf [options]
 
 ### ~ Input/Output options ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ###
 --inPath        : Directory of input files (see below for formatting)
---outPath       : Directory of output files for all tasks, aswell as final supertree
+--outPath       : Directory of output files for all tasks, as well as final supertree
 
 ### ~ Workflow options ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ###
 --withBusco     : When set to true, Busco will be used instead of compleasm [default=false]
@@ -32,7 +32,7 @@ nextflow run main.nf [options]
 --lineage       : This will be used in any busco/compleasm runs performed by the workflow.
 --buscoDir      : Absolute path to download/store lineages for busco.
 --compleasmDir  : Absolute path to download/store lineages for Compleasm.
-updateLineages  : When set to true, lineages will be downloaded even if their files already exist [default=false]
+--updateLineage : When set to true, lineages will be downloaded even if their files already exist [default=false]
 
 ### ~ Nextflow options ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ###
 -c              : Path to custom config file [default=nextflow.config]

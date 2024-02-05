@@ -171,7 +171,7 @@ process IQTREE2_CONCAT_CONSENSUS {
 	"""
 	mkdir Fasta
 	mv *.fasta Fasta
-	iqtree2 -p Fasta --prefix species -B 1000 -T ${task.cpus}
+	iqtree2 -p Fasta --prefix species -B 1000 -T ${task.cpus * 2}
 	"""
 }
 

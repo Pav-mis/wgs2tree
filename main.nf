@@ -64,16 +64,16 @@ workflow {
 	}
 
 	buscomp_runs = BUSCOMP(run).collect()
-	genes = PARSE_GENES(buscomp_runs).flatten()
-	msa = MAFFT(genes)
-    trees = IQTREE2(msa).collectFile(name: 'loci.treefile')
-	if (params.withConcat == true) {
-	    tree = IQTREE2_CONCAT_CONSENSUS(msa.collect())
-    }
-	else {
-	    tree = ASTRAL(trees)
-	}
-    final_tree = GCF(tree, trees)
-	final_tree.view()
+	// genes = PARSE_GENES(buscomp_runs).flatten()
+	// msa = MAFFT(genes)
+    // trees = IQTREE2(msa).collectFile(name: 'loci.treefile')
+	// if (params.withConcat == true) {
+	//     tree = IQTREE2_CONCAT_CONSENSUS(msa.collect())
+    // }
+	// else {
+	//     tree = ASTRAL(trees)
+	// }
+    // final_tree = GCF(tree, trees)
+	// final_tree.view()
 
 }
