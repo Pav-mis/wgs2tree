@@ -17,5 +17,5 @@ module load nextflow/23.10.0
 
 unset SBATCH_EXPORT
 
-nextflow run wgs2tree/main.nf
+nextflow run wgs2tree/main.nf --lineage 'actinopterygii_odb10' --out 'NF'
 

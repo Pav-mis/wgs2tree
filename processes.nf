@@ -98,6 +98,20 @@ process BUSCOMP {
 	"""
 }
 
+process COLLATE_GENES {
+	publishDir "${params.outPath}/nf_buscomp", mode: 'copy', overwrite: true
+	input:
+	tuple val(sample), path(run)
+
+	output:
+	path "${sample}.collate.faa"
+
+	"""
+	python $projectDir/bin/collate_genes.py run_*/run_${params.lineage}/busco_sequences/single_copy_busco_sequences/ ${sample}
+	"""
+
+}
+
 
 process PARSE_GENES {
 	publishDir "${params.outPath}/nf_parsed_genes", mode: 'copy', overwrite: true
