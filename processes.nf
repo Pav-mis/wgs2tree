@@ -27,6 +27,8 @@ process DOWNLOAD_LINEAGES_BUSCO {
 }
 
 process BUSCO {
+	memory { 1.8.GB * task.attempt * task.cpus }
+	errorStrategy { (task.attempt <= 3) ? 'retry' : 'finish' }
 	publishDir "${params.outPath}/nf_busco", mode: 'copy', overwrite: true
 
 	input:
@@ -43,6 +45,8 @@ process BUSCO {
 
 
 process COMPLEASM {
+	memory { 1.8.GB * task.attempt * task.cpus }
+	errorStrategy { (task.attempt <= 3) ? 'retry' : 'finish' }
 	input:
 	val ready
 	tuple val(sample), path(assembly)

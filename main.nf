@@ -1,7 +1,30 @@
+// include modules
 include { DOWNLOAD_LINEAGES_COMPLEASM; DOWNLOAD_LINEAGES_BUSCO; COMPLEASM; BUSCO; PARSE_TABLE; BUSCOMP; COLLATE_GENES; PARSE_GENES; MAFFT; IQTREE2; IQTREE2_CONCAT_CONSENSUS; ASTRAL; GCF } from './processes.nf'
+
+
+log.info """
+###============###
+    wgs-2-tree         
+###============###
+
+> inPath:           ${params.inPath}
+> outPath:          ${params.outPath}
+
+> withBusco:        ${params.withBusco}         
+> withConcat:       ${params.withConcat} 
+> geneThres:        ${params.geneThres}
+> lineage:          ${params.lineage}
+
+> buscoDir:         ${params.buscoDir}
+> compleasmDir:     ${params.compleasmDir}
+> updateLineage:    ${params.updateLineage}
+
+"""
+
 
 workflow {
 
+    // Determine which assemblies need busco/compleasm, based on what inputs are given
     def assemblies = []
     def assemblies_for_busco = []
     def buscos = []
@@ -41,10 +64,6 @@ workflow {
     }
     
 
-
-
-
-
 	//Channel of assemblies for BUSCO
 	for_busco = Channel.from(assemblies_for_busco)
 	//Channel of given BUSCOs
@@ -53,35 +72,39 @@ workflow {
 	asm = Channel.from(assemblies)
 
 	
-
+    //Get single copy orthologues with either busco or compleasm
 	if (params.withBusco == true) {
 	 	DOWNLOAD_LINEAGES_BUSCO()
-	 	run = BUSCO(DOWNLOAD_LINEAGES_BUSCO.out, for_busco).mix(asm, busco_input).groupTuple() //.mix(asm, busco_input)
+	 	run = BUSCO(DOWNLOAD_LINEAGES_BUSCO.out, for_busco).mix(asm, busco_input).groupTuple()
 	}
 	else {
 	 	DOWNLOAD_LINEAGES_COMPLEASM()
-	 	run = PARSE_TABLE(COMPLEASM(DOWNLOAD_LINEAGES_COMPLEASM.out, for_busco)).mix(asm, busco_input).groupTuple() //.mix(asm, busco_input)
+	 	run = PARSE_TABLE(COMPLEASM(DOWNLOAD_LINEAGES_COMPLEASM.out, for_busco)).mix(asm, busco_input).groupTuple()
 	}
 
+
+    //Split sample tuples into those that consist of a single assemblies and those with more than one assembly
     run.branch {
         single: it[1].size() == 2
         multi: it[1].size() > 2
     }.set{runs}
 
-    singles = COLLATE_GENES(runs.single)
-    multis = BUSCOMP(runs.multi)
- 
+
+    singles = COLLATE_GENES(runs.single) //Collate genes into the needed format for single assembly samples 
+    multis = BUSCOMP(runs.multi) //Get best non-redundant set of buscos from samples with multiple assemblies/runs
+    
 	best_genes = singles.mix(multis).collect()
-	genes = PARSE_GENES(best_genes).flatten()
-	msa = MAFFT(genes)
-    trees = IQTREE2(msa).collectFile(name: 'loci.treefile')
+
+	genes = PARSE_GENES(best_genes).flatten() //Group samples by gene
+	msa = MAFFT(genes) //Align each gene
+    trees = IQTREE2(msa).collectFile(name: 'loci.treefile') //Generate tree for each alignment
 	if (params.withConcat == true) {
-	    tree = IQTREE2_CONCAT_CONSENSUS(msa.collect())
+	    tree = IQTREE2_CONCAT_CONSENSUS(msa.collect()) //Generate supertree with concatenation if specified
     }
 	else {
-	    tree = ASTRAL(trees)
+	    tree = ASTRAL(trees) //Generate supertree with coalescence 
 	}
-    final_tree = GCF(tree, trees)
+    final_tree = GCF(tree, trees) //Calculate GCF values
 	final_tree.view()
 
 }
